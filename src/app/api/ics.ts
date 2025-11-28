@@ -18,6 +18,7 @@ export async function getIcs({ ctx, request }: { ctx: AppContext; request: Reque
 
   const year = yearParam ? parseInt(yearParam, 10) : new Date().getFullYear();
   const collectionType = type || "all";
+  const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD format
 
   // Find the street's directory (reuse logic from schedule.ts)
   const streetResults = await ctx.db
@@ -41,13 +42,17 @@ export async function getIcs({ ctx, request }: { ctx: AppContext; request: Reque
     });
   }
 
-  // Find best match (simplified from schedule.ts)
+  // Find the best match based on house number (synced with schedule.ts)
   let selectedStreet = streetResults.results[0];
+
   if (houseNumber && streetResults.results.length > 1) {
     const houseNum = parseInt(houseNumber, 10);
+
+    // Look for a specific range that includes this house number
     for (const s of streetResults.results) {
       if (s.houseNumbers) {
         const numbers = s.houseNumbers.split(",").map((n: string) => n.trim());
+        // Check if it's a range (e.g., "61-98") or specific numbers
         for (const num of numbers) {
           if (num.includes("-")) {
             const [start, end] = num.split("-").map((n: string) => parseInt(n.trim(), 10));
@@ -62,9 +67,46 @@ export async function getIcs({ ctx, request }: { ctx: AppContext; request: Reque
         }
       }
     }
+
+    // If no specific match found, use the entry without house numbers (general)
+    if (selectedStreet.houseNumbers && !streetResults.results.find((s) => !s.houseNumbers)) {
+      // Keep the first match
+    } else {
+      const generalEntry = streetResults.results.find((s) => !s.houseNumbers);
+      if (generalEntry && selectedStreet.houseNumbers) {
+        // Check if the house number matches any specific entry
+        let hasSpecificMatch = false;
+        for (const s of streetResults.results) {
+          if (s.houseNumbers) {
+            const numbers = s.houseNumbers.split(",").map((n: string) => n.trim());
+            for (const num of numbers) {
+              if (num.includes("-")) {
+                const [start, end] = num.split("-").map((n: string) => parseInt(n.trim(), 10));
+                if (houseNum >= start && houseNum <= end) {
+                  hasSpecificMatch = true;
+                  selectedStreet = s;
+                  break;
+                }
+              } else if (parseInt(num, 10) === houseNum) {
+                hasSpecificMatch = true;
+                selectedStreet = s;
+                break;
+              }
+            }
+            if (hasSpecificMatch) break;
+          }
+        }
+        if (!hasSpecificMatch) {
+          selectedStreet = generalEntry;
+        }
+      }
+    }
   } else if (!houseNumber && streetResults.results.length > 1) {
+    // If no house number provided, prefer the general entry (without house numbers)
     const generalEntry = streetResults.results.find((s) => !s.houseNumbers);
-    if (generalEntry) selectedStreet = generalEntry;
+    if (generalEntry) {
+      selectedStreet = generalEntry;
+    }
   }
 
   // Get dates based on type
@@ -81,7 +123,7 @@ export async function getIcs({ ctx, request }: { ctx: AppContext; request: Reque
       .bind(year, selectedStreet.directory)
       .all<{ date: string }>();
 
-    let dates = papierDates.results?.map((r) => r.date) || [];
+    let dates = papierDates.results?.map((r) => r.date).filter((d) => d >= today) || [];
     if (singleDate) {
       dates = dates.filter((d) => d === singleDate);
     }
@@ -99,7 +141,7 @@ export async function getIcs({ ctx, request }: { ctx: AppContext; request: Reque
       .bind(year, selectedStreet.directory)
       .all<{ date: string }>();
 
-    let dates = kartonDates.results?.map((r) => r.date) || [];
+    let dates = kartonDates.results?.map((r) => r.date).filter((d) => d >= today) || [];
     if (singleDate) {
       dates = dates.filter((d) => d === singleDate);
     }

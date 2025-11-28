@@ -133,13 +133,15 @@ function CollectionCard({
                   >
                     {formatDate(date)}
                   </span>
-                  <a
-                    href={`/api/ics?street=${encodeURIComponent(street)}&date=${date}&type=${type}`}
-                    className="opacity-0 group-hover:opacity-100 text-[#6B6B6B] hover:text-[#1A1A1A] transition-opacity p-1"
-                    title="Zum Kalender hinzufügen"
-                  >
-                    <CalendarIcon className="w-4 h-4" />
-                  </a>
+                  {!past && (
+                    <a
+                      href={`/api/ics?street=${encodeURIComponent(street)}&date=${date}&type=${type}`}
+                      className="opacity-0 group-hover:opacity-100 text-[#6B6B6B] hover:text-[#1A1A1A] transition-opacity p-1"
+                      title="Zum Kalender hinzufügen"
+                    >
+                      <CalendarIcon className="w-4 h-4" />
+                    </a>
+                  )}
                 </div>
               );
             })

@@ -49,7 +49,14 @@ export function AbfallKalender() {
         onTogglePastDates={() => setShowPastDates(!showPastDates)}
       />
 
-      {schedule && <DownloadButtons street={selectedStreet!} />}
+      {schedule && (
+        <DownloadButtons
+          street={selectedStreet!}
+          houseNumber={schedule.houseNumbers ?? undefined}
+          papierDates={schedule.papier}
+          kartonDates={schedule.karton}
+        />
+      )}
     </div>
   );
 }
