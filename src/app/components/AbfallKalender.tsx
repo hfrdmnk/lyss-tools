@@ -18,6 +18,7 @@ export function AbfallKalender() {
   const [selectedStreet, setSelectedStreet] = useState<string | null>(null);
   const [schedule, setSchedule] = useState<ScheduleData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPastDates, setShowPastDates] = useState(false);
 
   const handleStreetSelect = async (street: string, houseNumber?: string) => {
     setSelectedStreet(street);
@@ -41,7 +42,12 @@ export function AbfallKalender() {
     <div className="space-y-8">
       <StreetSelector onSelect={handleStreetSelect} />
 
-      <CollectionSchedule schedule={schedule} loading={loading} />
+      <CollectionSchedule
+        schedule={schedule}
+        loading={loading}
+        showPastDates={showPastDates}
+        onTogglePastDates={() => setShowPastDates(!showPastDates)}
+      />
 
       {schedule && <DownloadButtons street={selectedStreet!} />}
     </div>

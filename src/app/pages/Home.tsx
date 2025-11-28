@@ -2,7 +2,7 @@ import { AbfallKalender } from "../components/AbfallKalender";
 
 export const Home = () => {
   return (
-    <main className="min-h-screen bg-[#F5F4F0]">
+    <main className="min-h-screen bg-[#F5F4F0] flex flex-col">
       {/* Header */}
       <header className="border-b border-[#D4D2CD] bg-white">
         <div className="max-w-2xl mx-auto px-6 py-8">
@@ -22,8 +22,10 @@ export const Home = () => {
       </header>
 
       {/* Main content */}
-      <div className="max-w-2xl mx-auto px-6 py-10">
-        <AbfallKalender />
+      <div className="flex-1">
+        <div className="max-w-2xl mx-auto px-6 py-10">
+          <AbfallKalender />
+        </div>
       </div>
 
       {/* Footer */}
