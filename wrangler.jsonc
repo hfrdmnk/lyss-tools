@@ -34,5 +34,10 @@
       "database_name": "lyss-abfallkalender",
       "database_id": "609a1675-2d7e-4ed1-98cb-12f8d1522e01"
     }
+  ],
+
+  // Custom domain
+  "routes": [
+    { "pattern": "lyss.linea.studio", "custom_domain": true }
   ]
 }
