@@ -46,3 +46,4 @@ src/
 
 - `wrangler.jsonc` - Cloudflare Workers config (change `name` field before deploying)
 - `vite.config.mts` - Vite config with Cloudflare and RedwoodSDK plugins
+- The app's UI is in german

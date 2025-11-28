@@ -3,7 +3,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
 
   // Name of your worker
-  "name": "__change_me__",
+  "name": "lyss-abfallkalender",
 
   // Entry point for your worker
   "main": "src/worker.tsx",
@@ -25,5 +25,14 @@
   // Environment variables
   "vars": {
     // Add your environment variables here
-  }
+  },
+
+  // D1 Database
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "lyss-abfallkalender",
+      "database_id": "609a1675-2d7e-4ed1-98cb-12f8d1522e01"
+    }
+  ]
 }

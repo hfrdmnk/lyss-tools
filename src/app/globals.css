@@ -1,0 +1,177 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Dieter Rams inspired - "Less, but better" */
+@theme {
+  /* Warm monochrome palette inspired by Braun products */
+  --color-background: #F5F4F0;
+  --color-foreground: #1A1A1A;
+  --color-muted: #E8E6E1;
+  --color-muted-foreground: #6B6B6B;
+  --color-border: #D4D2CD;
+  --color-input: #E8E6E1;
+  --color-ring: #1A1A1A;
+  --color-primary: #1A1A1A;
+  --color-primary-foreground: #F5F4F0;
+  --color-secondary: #E8E6E1;
+  --color-secondary-foreground: #1A1A1A;
+  --color-accent: #E8E6E1;
+  --color-accent-foreground: #1A1A1A;
+  --color-destructive: #C41E3A;
+  --color-destructive-foreground: #F5F4F0;
+  --color-card: #FFFFFF;
+  --color-card-foreground: #1A1A1A;
+  --color-popover: #FFFFFF;
+  --color-popover-foreground: #1A1A1A;
+
+  /* Sharper, more intentional radii */
+  --radius-sm: 0.125rem;
+  --radius-md: 0.25rem;
+  --radius-lg: 0.375rem;
+  --radius-xl: 0.5rem;
+
+  /* DM Sans - geometric, functional */
+  --font-sans: "DM Sans", system-ui, sans-serif;
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  --radius: 0.375rem;
+  --background: #F5F4F0;
+  --foreground: #1A1A1A;
+  --card: #FFFFFF;
+  --card-foreground: #1A1A1A;
+  --popover: #FFFFFF;
+  --popover-foreground: #1A1A1A;
+  --primary: #1A1A1A;
+  --primary-foreground: #F5F4F0;
+  --secondary: #E8E6E1;
+  --secondary-foreground: #1A1A1A;
+  --muted: #E8E6E1;
+  --muted-foreground: #6B6B6B;
+  --accent: #E8E6E1;
+  --accent-foreground: #1A1A1A;
+  --destructive: #C41E3A;
+  --border: #D4D2CD;
+  --input: #D4D2CD;
+  --ring: #1A1A1A;
+  --chart-1: #1A1A1A;
+  --chart-2: #6B6B6B;
+  --chart-3: #9B9B9B;
+  --chart-4: #D4D2CD;
+  --chart-5: #E8E6E1;
+  --sidebar: #F5F4F0;
+  --sidebar-foreground: #1A1A1A;
+  --sidebar-primary: #1A1A1A;
+  --sidebar-primary-foreground: #F5F4F0;
+  --sidebar-accent: #E8E6E1;
+  --sidebar-accent-foreground: #1A1A1A;
+  --sidebar-border: #D4D2CD;
+  --sidebar-ring: #1A1A1A;
+
+  /* Custom colors for collection types - Braun-inspired accents */
+  --papier-color: #2563EB;
+  --karton-color: #B45309;
+}
+
+.dark {
+  --background: #1A1A1A;
+  --foreground: #F5F4F0;
+  --card: #262626;
+  --card-foreground: #F5F4F0;
+  --popover: #262626;
+  --popover-foreground: #F5F4F0;
+  --primary: #F5F4F0;
+  --primary-foreground: #1A1A1A;
+  --secondary: #333333;
+  --secondary-foreground: #F5F4F0;
+  --muted: #333333;
+  --muted-foreground: #9B9B9B;
+  --accent: #333333;
+  --accent-foreground: #F5F4F0;
+  --destructive: #DC2626;
+  --border: #404040;
+  --input: #404040;
+  --ring: #F5F4F0;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    font-feature-settings: "kern" 1, "liga" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "DM Sans", system-ui, sans-serif;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* Subtle grid pattern for depth */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, var(--border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Collection type indicators */
+.indicator-papier {
+  background-color: var(--papier-color);
+}
+
+.indicator-karton {
+  background-color: var(--karton-color);
+}
+
+/* Smooth transitions */
+@layer utilities {
+  .transition-smooth {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
