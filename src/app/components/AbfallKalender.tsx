@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { StreetSelector } from "./StreetSelector";
 import { CollectionSchedule } from "./CollectionSchedule";
 import { DownloadButtons } from "./DownloadButtons";
+import { LocalityTabs, type Locality } from "./LocalityTabs";
 
 interface ScheduleData {
   street: string;
@@ -15,10 +16,36 @@ interface ScheduleData {
 }
 
 export function AbfallKalender() {
+  const [locality, setLocality] = useState<Locality>("lyss");
   const [selectedStreet, setSelectedStreet] = useState<string | null>(null);
   const [schedule, setSchedule] = useState<ScheduleData | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPastDates, setShowPastDates] = useState(false);
+
+  // Fetch Busswil schedule when locality changes to busswil
+  useEffect(() => {
+    if (locality === "busswil") {
+      fetchBusswilSchedule();
+    } else {
+      // Reset when switching back to Lyss
+      setSchedule(null);
+      setSelectedStreet(null);
+    }
+  }, [locality]);
+
+  const fetchBusswilSchedule = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/schedule?locality=busswil");
+      const data = (await res.json()) as ScheduleData;
+      setSchedule(data);
+      setSelectedStreet("Busswil");
+    } catch {
+      setSchedule(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleStreetSelect = async (street: string, houseNumber?: string) => {
     setSelectedStreet(street);
@@ -38,9 +65,17 @@ export function AbfallKalender() {
     }
   };
 
+  const handleLocalityChange = (newLocality: Locality) => {
+    setLocality(newLocality);
+  };
+
   return (
-    <div className="space-y-8">
-      <StreetSelector onSelect={handleStreetSelect} />
+    <div className="space-y-6">
+      <LocalityTabs value={locality} onChange={handleLocalityChange} />
+
+      {locality === "lyss" && (
+        <StreetSelector onSelect={handleStreetSelect} />
+      )}
 
       <CollectionSchedule
         schedule={schedule}

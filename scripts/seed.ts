@@ -22,7 +22,7 @@ interface YearData {
     };
   };
   busswil: {
-    streets: Street[];
+    streets?: Street[]; // Optional - Busswil has a single schedule for all addresses
     schedules: {
       papier: Record<string, string[]>;
       karton: Record<string, string[]>;
@@ -69,12 +69,14 @@ function seed(remote: boolean = false) {
       );
     }
 
-    // Insert Busswil streets
-    for (const street of data.busswil.streets) {
-      const houseNumbers = street.houseNumbers ? `'${escapeSQL(street.houseNumbers)}'` : "NULL";
-      sqlStatements.push(
-        `INSERT INTO streets (name, house_numbers, directory, locality) VALUES ('${escapeSQL(street.name)}', ${houseNumbers}, ${street.directory}, 'busswil');`
-      );
+    // Insert Busswil streets (if any - Busswil may have no streets since all addresses share one schedule)
+    if (data.busswil.streets) {
+      for (const street of data.busswil.streets) {
+        const houseNumbers = street.houseNumbers ? `'${escapeSQL(street.houseNumbers)}'` : "NULL";
+        sqlStatements.push(
+          `INSERT INTO streets (name, house_numbers, directory, locality) VALUES ('${escapeSQL(street.name)}', ${houseNumbers}, ${street.directory}, 'busswil');`
+        );
+      }
     }
 
     // Track schedule IDs manually since we can't get them from INSERT in D1

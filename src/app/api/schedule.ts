@@ -13,16 +13,54 @@ export async function getSchedule({ ctx, request }: { ctx: AppContext; request: 
   const url = new URL(request.url);
   const street = url.searchParams.get("street");
   const houseNumber = url.searchParams.get("houseNumber");
+  const locality = url.searchParams.get("locality");
   const yearParam = url.searchParams.get("year");
 
+  const year = yearParam ? parseInt(yearParam, 10) : new Date().getFullYear();
+
+  // For Busswil: all addresses share one schedule (directory 0), no street needed
+  if (locality === "busswil") {
+    const papierDates = await ctx.db
+      .prepare(
+        `SELECT cd.date FROM collection_dates cd
+         JOIN schedules s ON cd.schedule_id = s.id
+         WHERE s.year = ? AND s.directory = 0 AND s.collection_type = 'papier'
+         ORDER BY cd.date ASC`
+      )
+      .bind(year)
+      .all<{ date: string }>();
+
+    const kartonDates = await ctx.db
+      .prepare(
+        `SELECT cd.date FROM collection_dates cd
+         JOIN schedules s ON cd.schedule_id = s.id
+         WHERE s.year = ? AND s.directory = 0 AND s.collection_type = 'karton'
+         ORDER BY cd.date ASC`
+      )
+      .bind(year)
+      .all<{ date: string }>();
+
+    const result: ScheduleResult = {
+      street: "Busswil",
+      houseNumbers: null,
+      locality: "busswil",
+      directory: 0,
+      papier: papierDates.results?.map((r) => r.date) || [],
+      karton: kartonDates.results?.map((r) => r.date) || [],
+    };
+
+    return new Response(JSON.stringify(result), {
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  // For Lyss: require street parameter
   if (!street) {
     return new Response(JSON.stringify({ error: "street parameter required" }), {
       status: 400,
       headers: { "Content-Type": "application/json" },
     });
   }
-
-  const year = yearParam ? parseInt(yearParam, 10) : new Date().getFullYear();
 
   // Find the street and determine the directory
   // If houseNumber is provided, try to find a specific range match first
