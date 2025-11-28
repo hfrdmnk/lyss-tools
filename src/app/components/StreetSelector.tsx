@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Search } from "lucide-react";
 
 interface Street {
@@ -20,6 +20,9 @@ export function StreetSelector({ onSelect }: StreetSelectorProps) {
   const [inputValue, setInputValue] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [pendingStreet, setPendingStreet] = useState<string | null>(null);
+  const [houseNumberInput, setHouseNumberInput] = useState("");
+  const houseNumberRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     async function loadStreets() {
@@ -36,6 +39,19 @@ export function StreetSelector({ onSelect }: StreetSelectorProps) {
     loadStreets();
   }, []);
 
+  // Detect streets that have multiple entries (need house number disambiguation)
+  const streetsNeedingHouseNumber = useMemo(() => {
+    const streetCounts = new Map<string, number>();
+    streets.forEach((s) => {
+      streetCounts.set(s.name, (streetCounts.get(s.name) || 0) + 1);
+    });
+    return new Set(
+      [...streetCounts.entries()]
+        .filter(([, count]) => count > 1)
+        .map(([name]) => name)
+    );
+  }, [streets]);
+
   // Get unique street names
   const uniqueStreetNames = [...new Set(streets.map((s) => s.name))];
 
@@ -49,7 +65,31 @@ export function StreetSelector({ onSelect }: StreetSelectorProps) {
   const handleSelect = (streetName: string) => {
     setInputValue(streetName);
     setIsOpen(false);
-    onSelect(streetName);
+
+    if (streetsNeedingHouseNumber.has(streetName)) {
+      // Street needs house number - show input
+      setPendingStreet(streetName);
+      setHouseNumberInput("");
+      // Focus the house number input after render
+      setTimeout(() => houseNumberRef.current?.focus(), 0);
+    } else {
+      // Street doesn't need house number - submit immediately
+      setPendingStreet(null);
+      onSelect(streetName);
+    }
+  };
+
+  const handleHouseNumberSubmit = () => {
+    if (pendingStreet && houseNumberInput.trim()) {
+      onSelect(pendingStreet, houseNumberInput.trim());
+    }
+  };
+
+  const handleHouseNumberKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleHouseNumberSubmit();
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,34 +111,56 @@ export function StreetSelector({ onSelect }: StreetSelectorProps) {
       <label className="block text-xs font-medium tracking-wide text-[#6B6B6B] uppercase">
         Strasse auswählen
       </label>
-      <div className="relative">
-        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-          <Search className="h-4 w-4 text-[#6B6B6B]" />
-        </div>
-        <input
-          type="text"
-          value={inputValue}
-          onChange={handleInputChange}
-          onFocus={handleInputFocus}
-          onBlur={handleInputBlur}
-          placeholder={loading ? "Laden..." : "Strasse eingeben..."}
-          className="w-full h-12 pl-11 pr-4 bg-white border border-[#D4D2CD] rounded-sm text-[#1A1A1A] placeholder:text-[#9B9B9B] focus:outline-none focus:ring-2 focus:ring-[#1A1A1A] focus:border-transparent transition-all"
-          disabled={loading}
-        />
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <Search className="h-4 w-4 text-[#6B6B6B]" />
+          </div>
+          <input
+            type="text"
+            value={inputValue}
+            onChange={handleInputChange}
+            onFocus={handleInputFocus}
+            onBlur={handleInputBlur}
+            placeholder={loading ? "Laden..." : "Strasse eingeben..."}
+            className="w-full h-12 pl-11 pr-4 bg-white border border-[#D4D2CD] rounded-sm text-[#1A1A1A] placeholder:text-[#9B9B9B] focus:outline-none focus:ring-2 focus:ring-[#1A1A1A] focus:border-transparent transition-all"
+            disabled={loading}
+          />
 
-        {/* Dropdown */}
-        {isOpen && filteredStreets.length > 0 && (
-          <div className="absolute z-50 w-full mt-1 bg-white border border-[#D4D2CD] rounded-sm shadow-lg max-h-64 overflow-auto">
-            {filteredStreets.slice(0, 50).map((name) => (
-              <button
-                key={name}
-                type="button"
-                onClick={() => handleSelect(name)}
-                className="w-full px-4 py-3 text-left text-sm text-[#1A1A1A] hover:bg-[#F5F4F0] transition-colors border-b border-[#E8E6E1] last:border-b-0"
-              >
-                {name}
-              </button>
-            ))}
+          {/* Dropdown */}
+          {isOpen && filteredStreets.length > 0 && (
+            <div className="absolute z-50 w-full mt-1 bg-white border border-[#D4D2CD] rounded-sm shadow-lg max-h-64 overflow-auto">
+              {filteredStreets.slice(0, 50).map((name) => (
+                <button
+                  key={name}
+                  type="button"
+                  onClick={() => handleSelect(name)}
+                  className="w-full px-4 py-3 text-left text-sm text-[#1A1A1A] hover:bg-[#F5F4F0] transition-colors border-b border-[#E8E6E1] last:border-b-0"
+                >
+                  {name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* House number input - shown when street needs disambiguation */}
+        {pendingStreet && (
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-[#6B6B6B] whitespace-nowrap">
+              Nr:
+            </label>
+            <input
+              ref={houseNumberRef}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={houseNumberInput}
+              onChange={(e) => setHouseNumberInput(e.target.value)}
+              onKeyDown={handleHouseNumberKeyDown}
+              placeholder="z.B. 20"
+              className="w-20 h-12 px-3 bg-white border border-[#D4D2CD] rounded-sm text-[#1A1A1A] placeholder:text-[#9B9B9B] focus:outline-none focus:ring-2 focus:ring-[#1A1A1A] focus:border-transparent transition-all"
+            />
           </div>
         )}
       </div>
