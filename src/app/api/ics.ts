@@ -16,7 +16,7 @@ export async function getIcs({ ctx, request }: { ctx: AppContext; request: Reque
     });
   }
 
-  const year = yearParam ? parseInt(yearParam, 10) : new Date().getFullYear();
+  const year = yearParam ? parseInt(yearParam, 10) : 2026;
   const collectionType = type || "all";
   const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD format
 
