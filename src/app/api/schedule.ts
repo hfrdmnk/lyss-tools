@@ -16,7 +16,7 @@ export async function getSchedule({ ctx, request }: { ctx: AppContext; request: 
   const locality = url.searchParams.get("locality");
   const yearParam = url.searchParams.get("year");
 
-  const year = yearParam ? parseInt(yearParam, 10) : new Date().getFullYear();
+  const year = yearParam ? parseInt(yearParam, 10) : 2026;
 
   // For Busswil: all addresses share one schedule (directory 0), no street needed
   if (locality === "busswil") {

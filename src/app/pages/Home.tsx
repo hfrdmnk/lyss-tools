@@ -16,7 +16,7 @@ export const Home = () => {
             </h1>
           </div>
           <p className="text-[#6B6B6B] text-sm tracking-wide">
-            Papier- und Kartonsammlung · Lyss & Busswil · 2025
+            Papier- und Kartonsammlung · Lyss & Busswil · 2026
           </p>
         </div>
       </header>
@@ -32,8 +32,15 @@ export const Home = () => {
       <footer className="border-t border-[#D4D2CD] bg-white mt-auto">
         <div className="max-w-2xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between text-xs text-[#6B6B6B]">
-            <span>Quelle: Gemeinde Lyss</span>
-            <span className="tracking-wide">2025</span>
+            <a
+              href="https://www.lyss.ch/de/abfallwirtschaft/abfallkalender/Abfallsammelkalender.php"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-[#1A1A1A] transition-colors"
+            >
+              Quelle: Gemeinde Lyss
+            </a>
+            <span className="tracking-wide">2026</span>
           </div>
         </div>
       </footer>

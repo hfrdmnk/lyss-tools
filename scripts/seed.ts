@@ -48,39 +48,66 @@ function seed(remote: boolean = false) {
 
   console.log(`Seeding ${remote ? "remote" : "local"} database...`);
 
-  for (const file of files) {
-    const data: YearData = JSON.parse(readFileSync(join(dataDir, file), "utf-8"));
+  // Clear all data first to avoid foreign key issues
+  // Also reset auto-increment counters so IDs start at 1
+  const clearStatements = [
+    "DELETE FROM collection_dates;",
+    "DELETE FROM schedules;",
+    "DELETE FROM streets;",
+    "DELETE FROM sqlite_sequence WHERE name IN ('collection_dates', 'schedules', 'streets');",
+  ];
+  const clearFile = join(__dirname, "clear-data.sql");
+  writeFileSync(clearFile, clearStatements.join("\n"));
+  console.log("Clearing existing data...");
+  runSQLFile(clearFile, remote);
+  unlinkSync(clearFile);
+
+  // Parse all files and sort by year
+  const allData = files
+    .map((file) => ({
+      file,
+      data: JSON.parse(readFileSync(join(dataDir, file), "utf-8")) as YearData,
+    }))
+    .sort((a, b) => a.data.year - b.data.year);
+
+  // Insert streets only from the newest year file (last in sorted array)
+  const newestData = allData[allData.length - 1].data;
+  const streetStatements: string[] = [];
+
+  console.log(`Inserting streets from ${newestData.year}...`);
+
+  for (const street of newestData.lyss.streets) {
+    const houseNumbers = street.houseNumbers ? `'${escapeSQL(street.houseNumbers)}'` : "NULL";
+    streetStatements.push(
+      `INSERT INTO streets (name, house_numbers, directory, locality) VALUES ('${escapeSQL(street.name)}', ${houseNumbers}, ${street.directory}, 'lyss');`
+    );
+  }
+
+  if (newestData.busswil.streets) {
+    for (const street of newestData.busswil.streets) {
+      const houseNumbers = street.houseNumbers ? `'${escapeSQL(street.houseNumbers)}'` : "NULL";
+      streetStatements.push(
+        `INSERT INTO streets (name, house_numbers, directory, locality) VALUES ('${escapeSQL(street.name)}', ${houseNumbers}, ${street.directory}, 'busswil');`
+      );
+    }
+  }
+
+  const streetsFile = join(__dirname, "seed-streets.sql");
+  writeFileSync(streetsFile, streetStatements.join("\n"));
+  runSQLFile(streetsFile, remote);
+  unlinkSync(streetsFile);
+
+  // Track schedule IDs across all files
+  let globalScheduleId = 1;
+
+  for (const { file, data } of allData) {
     const year = data.year;
 
     console.log(`Processing year ${year}...`);
 
     const sqlStatements: string[] = [];
 
-    // Clear existing data for this year
-    sqlStatements.push(`DELETE FROM collection_dates WHERE schedule_id IN (SELECT id FROM schedules WHERE year = ${year});`);
-    sqlStatements.push(`DELETE FROM schedules WHERE year = ${year};`);
-    sqlStatements.push(`DELETE FROM streets;`);
-
-    // Insert Lyss streets
-    for (const street of data.lyss.streets) {
-      const houseNumbers = street.houseNumbers ? `'${escapeSQL(street.houseNumbers)}'` : "NULL";
-      sqlStatements.push(
-        `INSERT INTO streets (name, house_numbers, directory, locality) VALUES ('${escapeSQL(street.name)}', ${houseNumbers}, ${street.directory}, 'lyss');`
-      );
-    }
-
-    // Insert Busswil streets (if any - Busswil may have no streets since all addresses share one schedule)
-    if (data.busswil.streets) {
-      for (const street of data.busswil.streets) {
-        const houseNumbers = street.houseNumbers ? `'${escapeSQL(street.houseNumbers)}'` : "NULL";
-        sqlStatements.push(
-          `INSERT INTO streets (name, house_numbers, directory, locality) VALUES ('${escapeSQL(street.name)}', ${houseNumbers}, ${street.directory}, 'busswil');`
-        );
-      }
-    }
-
     // Track schedule IDs manually since we can't get them from INSERT in D1
-    let scheduleId = 1;
     const scheduleMap: Record<string, number> = {};
 
     // Insert Lyss schedules
@@ -88,14 +115,14 @@ function seed(remote: boolean = false) {
       sqlStatements.push(
         `INSERT INTO schedules (year, directory, collection_type) VALUES (${year}, ${directory}, 'papier');`
       );
-      scheduleMap[`lyss-papier-${directory}`] = scheduleId++;
+      scheduleMap[`lyss-papier-${directory}`] = globalScheduleId++;
     }
 
     for (const directory of Object.keys(data.lyss.schedules.karton)) {
       sqlStatements.push(
         `INSERT INTO schedules (year, directory, collection_type) VALUES (${year}, ${directory}, 'karton');`
       );
-      scheduleMap[`lyss-karton-${directory}`] = scheduleId++;
+      scheduleMap[`lyss-karton-${directory}`] = globalScheduleId++;
     }
 
     // Insert Busswil schedules
@@ -103,14 +130,14 @@ function seed(remote: boolean = false) {
       sqlStatements.push(
         `INSERT INTO schedules (year, directory, collection_type) VALUES (${year}, ${directory}, 'papier');`
       );
-      scheduleMap[`busswil-papier-${directory}`] = scheduleId++;
+      scheduleMap[`busswil-papier-${directory}`] = globalScheduleId++;
     }
 
     for (const directory of Object.keys(data.busswil.schedules.karton)) {
       sqlStatements.push(
         `INSERT INTO schedules (year, directory, collection_type) VALUES (${year}, ${directory}, 'karton');`
       );
-      scheduleMap[`busswil-karton-${directory}`] = scheduleId++;
+      scheduleMap[`busswil-karton-${directory}`] = globalScheduleId++;
     }
 
     // Insert collection dates for Lyss

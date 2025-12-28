@@ -5,10 +5,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-npm run dev          # Start development server (http://localhost:5173)
-npm run build        # Build for production
-npm run check        # Generate types + run TypeScript type checking
-npm run release      # Deploy to Cloudflare Workers
+pnpm dev          # Start development server (http://localhost:5173)
+pnpm build        # Build for production
+pnpm check        # Generate types + run TypeScript type checking
+pnpm release      # Deploy to Cloudflare Workers
 ```
 
 ## Architecture

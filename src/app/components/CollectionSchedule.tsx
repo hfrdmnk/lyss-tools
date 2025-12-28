@@ -111,7 +111,7 @@ function CollectionCard({
       {/* All dates list */}
       <div className="px-5 py-4">
         <div className="text-[10px] font-medium tracking-widest text-[#6B6B6B] uppercase mb-3">
-          Alle Termine 2025
+          Alle Termine 2026
         </div>
         <div className="space-y-1">
           {displayDates.length > 0 ? (

@@ -58,16 +58,16 @@ Use ISO format: `YYYY-MM-DD` (e.g., `2026-01-17`)
 
 ```bash
 # Local database
-npm run seed
+pnpm seed
 
 # Remote (production) database
-npm run seed:remote
+pnpm seed:remote
 ```
 
 ## 4. Deploy
 
 ```bash
-npm run release
+pnpm release
 ```
 
 ## 5. Verify
